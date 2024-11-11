@@ -9,8 +9,9 @@ def main():
     #
     server_socket = socket.create_server(("localhost", 6379), reuse_port=True)
     client, addr = server_socket.accept()  # wait for client
+    data = client.recv(1024).decode()  # read data from client
     if "ping" in data.lower():
-            client_socket.send("+PONG\r\n".encode())
+        client.send("+PONG\r\n".encode())
 
 if __name__ == "__main__":
     main()
