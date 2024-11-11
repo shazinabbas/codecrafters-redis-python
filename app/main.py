@@ -1,8 +1,10 @@
 import socket
 import threading
+import time
 
-# Global dictionary for in-memory key-value storage
+# Global dictionary for in-memory key-value storage and expiry times
 data_store = {}
+expiry_store = {}
 
 def main() -> None:
     server_socket = socket.create_server(("localhost", 6379), reuse_port=True)
@@ -42,17 +44,29 @@ def process_command(command: str) -> str:
             echo_message = parts[4]
             return f"${len(echo_message)}\r\n{echo_message}\r\n"
         
-        # Handle SET command
-        elif command_name == "SET" and arg_count == 3:
+        # Handle SET command with optional PX (expiry)
+        elif command_name == "SET" and arg_count >= 3:
             key = parts[4]
             value = parts[6]
             data_store[key] = value
+            
+            # Check for PX (expiry) option
+            if arg_count == 5 and parts[8].upper() == "PX":
+                expiry_time_ms = int(parts[10])
+                expiry_store[key] = time.time() + (expiry_time_ms / 1000)
+            
             return "+OK\r\n"
         
-        # Handle GET command
+        # Handle GET command with expiry check
         elif command_name == "GET" and arg_count == 2:
             key = parts[4]
             if key in data_store:
+                # Check if the key has expired
+                if key in expiry_store and time.time() >= expiry_store[key]:
+                    # Key has expired
+                    del data_store[key]
+                    del expiry_store[key]
+                    return "$-1\r\n"  # Null bulk string
                 value = data_store[key]
                 return f"${len(value)}\r\n{value}\r\n"
             else:
