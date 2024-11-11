@@ -18,9 +18,8 @@ def connect(connection: socket.socket) -> None:
             print(f"recieved - {command}")
             connected = bool(command)
             response: str
-            match command:
-                case "*1\r\n$4\r\nPING\r\n":
-                    response = "+PONG\r\n"
+            if command == "*1\r\n$4\r\nPING\r\n":
+                response = "+PONG\r\n"
             print(f"responding with - {response}")
             connection.sendall(response.encode())
 if __name__ == "__main__":
