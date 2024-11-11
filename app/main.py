@@ -7,7 +7,6 @@ def main() -> None:
         address: tuple[str, int]
         connection, address = server_socket.accept()
         print(f"accepted connection - {address[0]}:{str(address[1])}")
-        connect(connection)
         thread: threading.Thread = threading.Thread(target=connect, args=[connection])
         thread.start()
 def connect(connection: socket.socket) -> None:
